@@ -9,14 +9,16 @@ import pygame
 C_BKGROUND = (0, 0, 0)
 
 class Snake:
-    def __init__(self):
+    def __init__(self, x, y, fld):
         self.age = 0
         self.w = 20
         self.h = self.w
-        self.size= 1
-        self.x = 
-        self.y = 
-        self.speed = 
+        self.size = 3
+        # Расположение каждой части тела в пространстве.
+        # Расположение каждой части состоит из x, y в пространстве.
+        self.body = [x, y]
+        self.speed = 0
+        self.field = fld 
 
 class Stone:
     def __init__(self):
@@ -32,12 +34,21 @@ class Berry:
         self.x = 
         self.y = 
 
+class Egg:
+    def __init__(self):
+        self.x =
+        self.y = 
+        self.w = 30 
+        self.h = 40
+
 class Field:
     def __init__(self):
-        self.snake = Snake
-        self.stone = Stone
-
-
+        self.w = 800
+        self.h = 600
+        self.snake = Snake(400, 300, self)
+        self.stone = Stone()
+        self.berry = Berry()
+        self.egg = Egg()
 
 class Fish:
     def __init__(self):
