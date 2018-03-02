@@ -4,64 +4,124 @@
 #
 # EnesGUL, dr-dobermann
 
+import random
+
 import pygame
 
 C_BKGROUND = (0, 0, 0)
 
-class Snake:
-    def __init__(self, x, y, fld):
+DD_LEFT  = 0
+DD_RIGHT = 1
+DD_UP    = 2
+DD_DOWN  = 3
+
+SZ_HEAD  = 20
+SZ_BODY  = 10
+SZ_BERRY = 15
+SZ_EGG   = 20
+
+
+class FieldObj:
+    def __init__(self, fld, x, y, w, h):
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+        self.field = fld
+
+    def Draw(self):
+        pass
+
+class SnakeHead(FieldObj):
+    def __init__(self, dir, fld, x, y):
+        FieldObj.__init__(self, fld, x, y, SZ_HEAD, SZ_HEAD)
+        self.direction = dir
+
+    def Draw(self):
+        # Нарисовать круг и две точки в качестве глаз
+        pass
+
+class SnakeBody(FieldObj):
+    def __init__(self, dir, fld, x, y):
+        FieldObj.__init__(self, fld, x, y, SZ_BODY, SZ_BODY)
+        self.direction = dir
+
+    def Draw(self):
+        # Нарисовать жирную линию по направлению движения тела
+        pass
+
+class SnakeTail(FieldObj):
+        def __init__(self, dir, fld, x, y):
+        FieldObj.__init__(self, fld, x, y, SZ_BODY, SZ_BODY)
+        self.direction = dir
+
+    def Draw(self):
+        # Нарисовать пол-линии по направлению движения
+
+class Snake(FieldObj):
+    def __init__(self, fld, x, y):
+        FieldObj.__init__(self, fld, x, y, 0, 0)
         self.age = 0
-        self.w = 20
-        self.h = self.w
         self.size = 3
-        # Расположение каждой части тела в пространстве.
-        # Расположение каждой части состоит из x, y в пространстве.
-        self.body = [x, y]
+        self.body = []
         self.speed = 0
-        self.field = fld 
+        self.MakeSnake()
 
-class Stone:
-    def __init__(self):
-        self.x = 
-        self.y = 
-        self.w = 20
-        self.h = 25
+    def MakeSnake(self):
+        self.body.append(SnakeHead(DD_RIGHT, self.field, self.x, self.y))
+        self.body.append(SnakeBody(DD_RIGHT, self.field, 
+            self.x - SZ_BODY, self.y + int((SZ_HEAD - SZ_BODY)/2)))
+        self.body.append(SnakeTail(DD_RIGHT, self.field,
+            self.x - 2 * SZ_BODY, self.y + int((SZ_HEAD - SZ_BODY)/2)))
 
-class Berry:
-    def __init__(self):
-        self.w = 20
-        self.h = 20
-        self.x = 
-        self.y = 
+    def Draw(self):
+        for b in self.body:
+            b.Draw()
 
-class Egg:
-    def __init__(self):
-        self.x =
-        self.y = 
-        self.w = 30 
-        self.h = 40
+
+class Stone(FieldObj):
+    def __init__(self, fld, x, y):
+        size = random.randint(10, 50)
+        FieldObj.__init__(self, fld, x, y, size, size)
+    
+    def Draw(self):
+        # Нарисовать закрашенный круг
+        pass
+
+class Berry(FieldObj):
+    def __init__(self, fld, x, y):
+        FieldObj.__init__(self, fld, x, y, SZ_BERRY, SZ_BERRY)
+
+    def Draw(self):
+        # нарисовать кружок красного цвета
+        pass 
+
+class Egg(FieldObj):
+    def __init__(self, fld, x, y):
+        FieldObj.__init__(self, fld, x, y, SZ_EGG, SZ_EGG)
+        
+    def Draw(self):
+        # нарисовать круг белого цвета
+        pass
 
 class Field:
-    def __init__(self):
-        self.w = 800
-        self.h = 600
-        self.snake = Snake(400, 300, self)
-        self.stone = Stone()
-        self.berry = Berry()
-        self.egg = Egg()
+    def __init__(self, screen, x, y, w, h):
+        self.screen = screen
+        self.x, self.y = x, y
+        self.w, self.h = w, h
+        self.fldObj = []
+        self.snake = None
 
-class Fish:
-    def __init__(self):
-        self.x = 
-        self.y = 
-        self.w = 25
-        self.h = 30
-        self.speed = 
+    def CreateField(self):
+        # В случайных местах создать 6 камней и одну ягоду
+        # По центру экрана создать змею
+        pass
 
-class Water:
-    def __init__(self):
-        self.fish = Fish
-
+    def Draw(self):
+        # Нарисовать фон
+        # Нарисовать все объекты
+        # Нарисовать змею
+        pass
 
 
 def run():
@@ -73,6 +133,7 @@ def run():
     # Добавить таймер чтобы обновление было не чаще чем 60 кадров в секунду
     clock = pygame.time.Clock()
     
+    # Создать поле
     
     done = False
 
@@ -90,6 +151,7 @@ def run():
         # background image.
         
         # --- Drawing code should go here      
+        # Нарисовать поле
 
         # --- Go ahead and update the screen with what we've drawn.
         pygame.display.flip()
