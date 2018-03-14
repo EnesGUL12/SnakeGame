@@ -20,6 +20,10 @@ SZ_BODY  = 10
 SZ_BERRY = 15
 SZ_EGG   = 20
 
+C_STONE  = (127, 127, 127)
+C_BERRY  = (181,  30,  30)
+C_EGG    = (255, 255, 255)
+C_BODY   = (  0, 198,  50)
 
 class FieldObj:
     def __init__(self, fld, x, y, w, h):
@@ -39,7 +43,8 @@ class SnakeHead(FieldObj):
 
     def Draw(self):
         # Нарисовать круг и две точки в качестве глаз
-        pass
+        pygame.draw.circle(Field.__init__(self.screen), C_BERRY,
+                           (""), SZ_HEAD / 2, 1)
 
 class SnakeBody(FieldObj):
     def __init__(self, dir, fld, x, y):
@@ -48,7 +53,7 @@ class SnakeBody(FieldObj):
 
     def Draw(self):
         # Нарисовать жирную линию по направлению движения тела
-        pass
+        pygame.draw.line(Field.__init__(self, screen), C_BODY, "  ", " ", SZ_BODY)
 
 class SnakeTail(FieldObj):
         def __init__(self, dir, fld, x, y):
@@ -57,6 +62,7 @@ class SnakeTail(FieldObj):
 
     def Draw(self):
         # Нарисовать пол-линии по направлению движения
+        pygame.draw.line(Field.__init__(self, screen), C_BODY, "  ", " ", SZ_BODY)
 
 class Snake(FieldObj):
     def __init__(self, fld, x, y):
@@ -86,7 +92,8 @@ class Stone(FieldObj):
     
     def Draw(self):
         # Нарисовать закрашенный круг
-        pass
+        pygame.draw.circle(Field.__init__(self.screen), C_STONE,
+                           (random.randint(50, 400), random.randint(50,300)), 20, 1)
 
 class Berry(FieldObj):
     def __init__(self, fld, x, y):
@@ -94,7 +101,9 @@ class Berry(FieldObj):
 
     def Draw(self):
         # нарисовать кружок красного цвета
-        pass 
+        pygame.draw.circle(Field.__init__(self.screen), C_BERRY,
+                           (random.randint(50, 400), random.randint(50,300)), SZ_BERRY / 2, 1)
+        
 
 class Egg(FieldObj):
     def __init__(self, fld, x, y):
@@ -102,7 +111,9 @@ class Egg(FieldObj):
         
     def Draw(self):
         # нарисовать круг белого цвета
-        pass
+        pygame.draw.circle(Field.__init__(self.screen), C_EGG,
+                   (random.randint(50, 400), random.randint(50,300)), SZ_EGG / 2, 1)
+
 
 class Field:
     def __init__(self, screen, x, y, w, h):
@@ -113,9 +124,10 @@ class Field:
         self.snake = None
 
     def CreateField(self):
-        # В случайных местах создать 6 камней и одну ягоду
+        # В случайных местах создать 6 камней и одну ягодy
         # По центру экрана создать змею
-        pass
+        for d in range(6):
+            d.Stone.Draw()
 
     def Draw(self):
         # Нарисовать фон
