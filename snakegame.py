@@ -19,6 +19,7 @@ SZ_HEAD  = 20
 SZ_BODY  = 10
 SZ_BERRY = 15
 SZ_EGG   = 20
+SZ_STONE = SZ_BERRY
 
 C_STONE  = (127, 127, 127)
 C_BERRY  = (181,  30,  30)
@@ -43,8 +44,15 @@ class SnakeHead(FieldObj):
 
     def Draw(self):
         # Нарисовать круг и две точки в качестве глаз
-        pygame.draw.circle(Field.__init__(self.screen), C_BERRY,
-                           (""), SZ_HEAD / 2, 1)
+        pygame.draw.circle(self.field.screen, C_BERRY,
+                           (self.x + int(SZ_HEAD/2), self.y + int(SZ_HEAD/2)),
+                           int(SZ_HEAD / 2))
+        if self.direction == DD_RIGHT or self.direction == DD_LEFT:
+            # Нарисовать две точки глаз одна под другой(вертикально)
+            pass
+        else:
+            # Нарисовать две точки глаз одну за другой(горизонтально)
+            pass 
 
 class SnakeBody(FieldObj):
     def __init__(self, dir, fld, x, y):
@@ -53,16 +61,18 @@ class SnakeBody(FieldObj):
 
     def Draw(self):
         # Нарисовать жирную линию по направлению движения тела
-        pygame.draw.line(Field.__init__(self, screen), C_BODY, "  ", " ", SZ_BODY)
+        #pygame.draw.line(Field.__init__(self, screen), C_BODY, "  ", " ", SZ_BODY)
+        pass
 
 class SnakeTail(FieldObj):
-        def __init__(self, dir, fld, x, y):
+    def __init__(self, dir, fld, x, y):
         FieldObj.__init__(self, fld, x, y, SZ_BODY, SZ_BODY)
         self.direction = dir
 
     def Draw(self):
         # Нарисовать пол-линии по направлению движения
-        pygame.draw.line(Field.__init__(self, screen), C_BODY, "  ", " ", SZ_BODY)
+        #pygame.draw.line(Field.__init__(self, screen), C_BODY, "  ", " ", SZ_BODY)
+        pass
 
 class Snake(FieldObj):
     def __init__(self, fld, x, y):
@@ -92,8 +102,9 @@ class Stone(FieldObj):
     
     def Draw(self):
         # Нарисовать закрашенный круг
-        pygame.draw.circle(Field.__init__(self.screen), C_STONE,
-                           (random.randint(50, 400), random.randint(50,300)), 20, 1)
+        pygame.draw.circle(self.field.screen, C_STONE,
+                           (self.x + int(SZ_STONE/2), self.y + int(SZ_STONE/2)), 
+                           int(SZ_STONE/2))
 
 class Berry(FieldObj):
     def __init__(self, fld, x, y):
@@ -101,8 +112,9 @@ class Berry(FieldObj):
 
     def Draw(self):
         # нарисовать кружок красного цвета
-        pygame.draw.circle(Field.__init__(self.screen), C_BERRY,
-                           (random.randint(50, 400), random.randint(50,300)), SZ_BERRY / 2, 1)
+        pygame.draw.circle(self.field.screen, C_BERRY,
+                           (self.x + int(SZ_BERRY/2), self.y + int(SZ_BERRY/2)), 
+                           int(SZ_BERRY / 2))
         
 
 class Egg(FieldObj):
@@ -111,8 +123,9 @@ class Egg(FieldObj):
         
     def Draw(self):
         # нарисовать круг белого цвета
-        pygame.draw.circle(Field.__init__(self.screen), C_EGG,
-                   (random.randint(50, 400), random.randint(50,300)), SZ_EGG / 2, 1)
+        pygame.draw.circle(self.field.screen, C_EGG,
+                   (self.x + int(SZ_EGG/2), self.y + int(SZ_EGG/2)),
+                   int(SZ_EGG / 2))
 
 
 class Field:
@@ -120,32 +133,46 @@ class Field:
         self.screen = screen
         self.x, self.y = x, y
         self.w, self.h = w, h
-        self.fldObj = []
+        self.stones = []
         self.snake = None
+        self.berry = None
 
     def CreateField(self):
+        w, h = self.screen.get_size()
         # В случайных местах создать 6 камней и одну ягодy
+        for s in range(6):
+            x, y = random.randint(0, w), random.randint(0, h)
+            self.stones.append(Stone(self, x, y))
+        x, y = random.randint(0, w), random.randint(0, h)
+        self.berry = Berry(self, x, y)
         # По центру экрана создать змею
-        for d in range(6):
-            d.Stone.Draw()
+        self.snake = Snake(self, int(w/2), int(h/2))
 
     def Draw(self):
         # Нарисовать фон
         # Нарисовать все объекты
+        for s in self.stones:
+            s.Draw()
+
+        # Нарисовать ягоду
+        self.berry.Draw()
+
         # Нарисовать змею
-        pass
+        self.snake.Draw()
 
 
 def run():
     pygame.init()
 
-    size=[800, 600]
+    size=[1600, 900]
     screen=pygame.display.set_mode(size, pygame.DOUBLEBUF)
     pygame.display.set_caption("Snake")
     # Добавить таймер чтобы обновление было не чаще чем 60 кадров в секунду
     clock = pygame.time.Clock()
     
     # Создать поле
+    fld = Field(screen, 0, 0, screen.get_width(), screen.get_height())
+    fld.CreateField()
     
     done = False
 
@@ -164,6 +191,7 @@ def run():
         
         # --- Drawing code should go here      
         # Нарисовать поле
+        fld.Draw()
 
         # --- Go ahead and update the screen with what we've drawn.
         pygame.display.flip()
@@ -175,6 +203,6 @@ def run():
     pygame.quit()
     
 
-
-run()
+if __name__ == "__main__":
+    run()
 
