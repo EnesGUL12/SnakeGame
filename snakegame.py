@@ -8,7 +8,6 @@ import random
 
 import pygame
 
-C_BKGROUND = (0, 0, 0)
 
 DD_LEFT  = 0
 DD_RIGHT = 1
@@ -16,15 +15,18 @@ DD_UP    = 2
 DD_DOWN  = 3
 
 SZ_HEAD  = 20
-SZ_BODY  = 10
+SZ_BODY  = 13
 SZ_BERRY = 15
 SZ_EGG   = 20
 SZ_STONE = SZ_BERRY
+SZ_EYES  = 2
 
-C_STONE  = (127, 127, 127)
-C_BERRY  = (181,  30,  30)
-C_EGG    = (255, 255, 255)
-C_BODY   = (  0, 198,  50)
+C_BKGROUND = (  0,   0,   0)
+C_STONE    = (127, 127, 127)
+C_BERRY    = (181,  30,  30)
+C_EGG      = (255, 255, 255)
+C_BODY     = (  0, 198,  50)
+C_EYES     = (  0, 162, 232)
 
 class FieldObj:
     def __init__(self, fld, x, y, w, h):
@@ -49,10 +51,17 @@ class SnakeHead(FieldObj):
                            int(SZ_HEAD / 2))
         if self.direction == DD_RIGHT or self.direction == DD_LEFT:
             # Нарисовать две точки глаз одна под другой(вертикально)
-            pass
+            pygame.draw.circle(self.field.screen, C_EYES,
+                               (self.x + int(SZ_HEAD / 2), self.y + int(SZ_HEAD / 3)), SZ_EYES)
+            pygame.draw.circle(self.field.screen, C_EYES,
+                               (self.x + int(SZ_HEAD / 2), self.y + int(SZ_HEAD - (SZ_HEAD / 3))), SZ_EYES)
         else:
             # Нарисовать две точки глаз одну за другой(горизонтально)
-            pass 
+            pygame.draw.line(self.field.screen, C_EYES,
+                             (self.x + int(SZ_HEAD / 3), self.y + int(SZ_HEAD / 2)), SZ_EYES)
+            pygame.draw.line(self.field.screen, C_EYES,
+                             (self.x + int(SZ_HEAD - (SZ_HEAD / 3)), self.y + int(SZ_HEAD / 2)), SZ_EYES)
+ 
 
 class SnakeBody(FieldObj):
     def __init__(self, dir, fld, x, y):
@@ -61,8 +70,24 @@ class SnakeBody(FieldObj):
 
     def Draw(self):
         # Нарисовать жирную линию по направлению движения тела
-        #pygame.draw.line(Field.__init__(self, screen), C_BODY, "  ", " ", SZ_BODY)
-        pass
+        # Направление вправо
+        if self.direction == DD_RIGHT:
+            pygame.draw.line(self.field.screen, C_BODY, (self.x, self.y + int(SZ_BODY/2)),
+                             (self.x - SZ_BODY, self.y + int(SZ_BODY/2)), SZ_BODY)
+        # Направление влево
+        elif self.direction == DD_LEFT:
+            pygame.draw.line(self.field.screen, C_BODY, (self.x + SZ_HEAD, self.y + int(SZ_BODY/2)),
+                             (self.x + (SZ_BODY + SZ_HEAD), self.y + int(SZ_BODY/2)), SZ_BODY)
+        # Направление вверх
+        elif self.direction == DD_UP:
+            pygame.draw.line(self.field.screen, C_BODY, (self.x + int(SZ_HEAD/2), self.y + SZ_HEAD),
+                             (self.x + int(SZ_BODY / 2), self.y + (SZ_HEAD + SZ_BODY), SZ_BODY))
+        # Направление вниз
+        else:
+            pygame.draw.line(self.field.screen, C_BODY, (self.x + int(SZ_HEAD/2), self.y),
+                             (self.x + int(SZ_BODY / 2), self.y - SZ_BODY), SZ_BODY)
+
+
 
 class SnakeTail(FieldObj):
     def __init__(self, dir, fld, x, y):
