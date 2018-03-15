@@ -7,6 +7,7 @@
 import random
 
 import pygame
+import pygame.locals
 
 
 DD_LEFT  = 0
@@ -16,6 +17,7 @@ DD_DOWN  = 3
 
 SZ_HEAD  = 20
 SZ_BODY  = 13
+SZ_TAIL  = SZ_BODY / 2
 SZ_BERRY = 15
 SZ_EGG   = 20
 SZ_STONE = SZ_BERRY
@@ -96,8 +98,20 @@ class SnakeTail(FieldObj):
 
     def Draw(self):
         # Нарисовать пол-линии по направлению движения
-        #pygame.draw.line(Field.__init__(self, screen), C_BODY, "  ", " ", SZ_BODY)
-        pass
+        if self.direction == DD_RIGHT:
+            pygame.draw.line(self.field.screen, C_BODY, (self.x - SZ_BODY, self.y + int(SZ_BODY/2)),
+            (self.x - SZ_BODY - SZ_TAIL, self.y + int(SZ_BODY/2)), SZ_BODY)
+        elif self.direction == DD_LEFT:
+            pygame.draw.line(self.field.screen, C_BODY, (self.x + SZ_HEAD + SZ_BODY, self.y + int(SZ_BODY/2)),
+            (self.x + SZ_HEAD + SZ_BODY + SZ_TAIL, self.y + int(SZ_BODY/2)), SZ_BODY)
+        elif self.direction == DD_UP:
+            pygame.draw.line(self.field.screen, C_BODY, (self.x + int(SZ_HEAD / 2), self.y + SZ_HEAD + SZ_BODY),
+            (self.x + int(SZ_BODY/2), self.y + SZ_BODY + SZ_HEAD + SZ_TAIL), SZ_BODY) 
+        else:
+            pygame.draw.line(self.field.screen, C_BODY, (self.x + int(SZ_HEAD / 2), self.y - SZ_BODY),
+            (self.x + int(SZ_BODY/2), self.y - SZ_HEAD - SZ_TAIL), SZ_BODY) 
+            
+
 
 class Snake(FieldObj):
     def __init__(self, fld, x, y):
@@ -205,6 +219,12 @@ def run():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 done = True
+
+            # Обработать нажатия клавиш
+            if event.type == pygame.KEYDOWN:
+                if event.type == K_BACKSPACE:
+                    done = True
+                    continue
     
         # --- Screen-clearing code goes here
         screen.fill(C_BKGROUND)
