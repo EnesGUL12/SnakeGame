@@ -4,6 +4,7 @@
 #
 # EnesGUL, dr-dobermann
 
+import sys
 import random
 
 import pygame
@@ -16,8 +17,7 @@ DD_UP    = 2
 DD_DOWN  = 3
 
 SZ_HEAD  = 20
-SZ_BODY  = 13
-SZ_TAIL  = SZ_BODY / 2
+SZ_BODY  = 20
 SZ_BERRY = 15
 SZ_EGG   = 20
 SZ_STONE = SZ_BERRY
@@ -41,10 +41,55 @@ class FieldObj:
     def Draw(self):
         pass
 
-class SnakeHead(FieldObj):
-    def __init__(self, dir, fld, x, y):
-        FieldObj.__init__(self, fld, x, y, SZ_HEAD, SZ_HEAD)
+
+class SnakeElem(FieldObj):
+    def __init__(self, fld, dir, x, y, w, h):
+        FieldObj.__init__(self, fld, x, y, w, h)
         self.direction = dir
+        self.speed = 0 
+        # Хранит точки изменения направления
+        # Точки направления - [x, y, new_dir]
+        self.ch_dir = []
+
+    def Move(self, speed):
+        self.speed = speed
+        if self.direction == DD_RIGHT:
+            dx = self.speed
+            dy = 0
+        elif self.direction == DD_LEFT:
+            dx = -self.speed
+            dy = 0
+        elif self.direction == DD_UP:
+            dx = 0
+            dy = -self.speed
+        elif self.direction == DD_DOWN:
+            dx = 0
+            dy = self.speed
+        self.x += dx
+        self.y += dy
+
+        if self.x > self.field.w:
+            self.x = 0
+        if self.x < 0:
+            self.x = self.field.w
+        if self.y > self.field.h:
+            self.y = 0
+        if self.y < 0:
+            self.y = self.field.h
+
+        if len(self.ch_dir) == 0:
+            return
+        if self.x == self.ch_dir[0][0] and self.y == self.ch_dir[0][1]:
+            self.direction = self.ch_dir[0][2]
+            self.ch_dir.pop(0)
+
+    def AddCDPoint(self, x, y, new_dir):
+        self.ch_dir.append([x, y, new_dir])
+
+
+class SnakeHead(SnakeElem):
+    def __init__(self, dir, fld, x, y, w = SZ_HEAD, h = SZ_HEAD):
+        SnakeElem.__init__(self, fld, dir, x, y, w, h)
 
     def Draw(self):
         # Нарисовать круг и две точки в качестве глаз
@@ -59,57 +104,57 @@ class SnakeHead(FieldObj):
                                (self.x + int(SZ_HEAD / 2), self.y + int(SZ_HEAD - (SZ_HEAD / 3))), SZ_EYES)
         else:
             # Нарисовать две точки глаз одну за другой(горизонтально)
-            pygame.draw.line(self.field.screen, C_EYES,
-                             (self.x + int(SZ_HEAD / 3), self.y + int(SZ_HEAD / 2)), SZ_EYES)
-            pygame.draw.line(self.field.screen, C_EYES,
-                             (self.x + int(SZ_HEAD - (SZ_HEAD / 3)), self.y + int(SZ_HEAD / 2)), SZ_EYES)
- 
+            pygame.draw.circle(self.field.screen, C_EYES,
+                               (self.x + int(SZ_HEAD / 3), self.y + int(SZ_HEAD / 2)), SZ_EYES)
+            pygame.draw.circle(self.field.screen, C_EYES,
+                               (self.x + int(SZ_HEAD - (SZ_HEAD / 3)), self.y + int(SZ_HEAD / 2)), SZ_EYES)
 
-class SnakeBody(FieldObj):
-    def __init__(self, dir, fld, x, y):
-        FieldObj.__init__(self, fld, x, y, SZ_BODY, SZ_BODY)
-        self.direction = dir
+
+class SnakeBody(SnakeElem):
+    def __init__(self, dir, fld, x, y, w = SZ_BODY, h = SZ_BODY):
+        SnakeElem.__init__(self, fld, dir ,x, y, w, h)
 
     def Draw(self):
         # Нарисовать жирную линию по направлению движения тела
-        # Направление вправо
-        if self.direction == DD_RIGHT:
+        # Направление вправо или влево
+        if self.direction == DD_RIGHT or self.direction == DD_LEFT:
             pygame.draw.line(self.field.screen, C_BODY, (self.x, self.y + int(SZ_BODY/2)),
-                             (self.x - SZ_BODY, self.y + int(SZ_BODY/2)), SZ_BODY)
-        # Направление влево
-        elif self.direction == DD_LEFT:
-            pygame.draw.line(self.field.screen, C_BODY, (self.x + SZ_HEAD, self.y + int(SZ_BODY/2)),
-                             (self.x + (SZ_BODY + SZ_HEAD), self.y + int(SZ_BODY/2)), SZ_BODY)
-        # Направление вверх
-        elif self.direction == DD_UP:
-            pygame.draw.line(self.field.screen, C_BODY, (self.x + int(SZ_HEAD/2), self.y + SZ_HEAD),
-                             (self.x + int(SZ_BODY / 2), self.y + (SZ_HEAD + SZ_BODY), SZ_BODY))
-        # Направление вниз
-        else:
+                             (self.x + SZ_BODY, self.y + int(SZ_BODY/2)), SZ_BODY)
+        # Направление вверх или вниз
+        elif self.direction == DD_UP or self.direction == DD_DOWN:
             pygame.draw.line(self.field.screen, C_BODY, (self.x + int(SZ_HEAD/2), self.y),
-                             (self.x + int(SZ_BODY / 2), self.y - SZ_BODY), SZ_BODY)
+                             (self.x + int(SZ_BODY / 2), self.y + SZ_BODY), SZ_BODY)
 
 
-
-class SnakeTail(FieldObj):
-    def __init__(self, dir, fld, x, y):
-        FieldObj.__init__(self, fld, x, y, SZ_BODY, SZ_BODY)
-        self.direction = dir
+class SnakeTail(SnakeElem):
+    def __init__(self, dir, fld, x, y, w = SZ_BODY, h = SZ_BODY):
+        SnakeElem.__init__(self, fld, dir, x, y, w, h)
 
     def Draw(self):
         # Нарисовать пол-линии по направлению движения
         if self.direction == DD_RIGHT:
-            pygame.draw.line(self.field.screen, C_BODY, (self.x - SZ_BODY, self.y + int(SZ_BODY/2)),
-            (self.x - SZ_BODY - SZ_TAIL, self.y + int(SZ_BODY/2)), SZ_BODY)
+            x1 = self.x + int(SZ_BODY/2)
+            x2 = self.x + SZ_BODY
+            y1 = self.y + int(SZ_BODY/2)
+            y2 = y1
         elif self.direction == DD_LEFT:
-            pygame.draw.line(self.field.screen, C_BODY, (self.x + SZ_HEAD + SZ_BODY, self.y + int(SZ_BODY/2)),
-            (self.x + SZ_HEAD + SZ_BODY + SZ_TAIL, self.y + int(SZ_BODY/2)), SZ_BODY)
+            x1 = self.x
+            x2 = self.x + int(SZ_BODY/2)
+            y1 = self.y + int(SZ_BODY/2)
+            y2 = y1          
         elif self.direction == DD_UP:
-            pygame.draw.line(self.field.screen, C_BODY, (self.x + int(SZ_HEAD / 2), self.y + SZ_HEAD + SZ_BODY),
-            (self.x + int(SZ_BODY/2), self.y + SZ_BODY + SZ_HEAD + SZ_TAIL), SZ_BODY) 
+            x1 = self.x + int(SZ_BODY/2)
+            x2 = x1 
+            y1 = self.y
+            y2 = self.y + int(SZ_BODY/2)
         else:
-            pygame.draw.line(self.field.screen, C_BODY, (self.x + int(SZ_HEAD / 2), self.y - SZ_BODY),
-            (self.x + int(SZ_BODY/2), self.y - SZ_HEAD - SZ_TAIL), SZ_BODY) 
+            x1 = self.x + int(SZ_BODY/2)
+            x2 = x1 
+            y1 = self.y + int(SZ_BODY/2)
+            y2 = self.y + SZ_BODY            
+        pygame.draw.line(self.field.screen, C_BODY, (x1, y1),
+                         (x2, y2), SZ_BODY) 
+        
             
 
 
@@ -119,15 +164,31 @@ class Snake(FieldObj):
         self.age = 0
         self.size = 3
         self.body = []
-        self.speed = 0
+        self.speed = 2
+        self.direction = DD_RIGHT
         self.MakeSnake()
 
+    def Move(self):
+        for e in self.body:
+            e.Move(self.speed)
+        
+    def ChangeDir(self, dir):
+        dir_constr = [set([DD_LEFT, DD_RIGHT]),
+                      set([DD_DOWN, DD_UP])]
+        for dc in dir_constr:    
+            if self.direction in dc and dir in dc:
+                return
+        self.direction = dir
+        self.body[0].direction = dir
+        for e in self.body[1:]:
+            e.AddCDPoint(self.body[0].x, self.body[0].y, dir) 
+
     def MakeSnake(self):
-        self.body.append(SnakeHead(DD_RIGHT, self.field, self.x, self.y))
-        self.body.append(SnakeBody(DD_RIGHT, self.field, 
-            self.x - SZ_BODY, self.y + int((SZ_HEAD - SZ_BODY)/2)))
-        self.body.append(SnakeTail(DD_RIGHT, self.field,
-            self.x - 2 * SZ_BODY, self.y + int((SZ_HEAD - SZ_BODY)/2)))
+        self.body.append(SnakeHead(self.direction, self.field, self.x, self.y))
+        self.body.append(SnakeBody(self.direction, self.field, 
+            self.x - SZ_BODY, self.y))
+        self.body.append(SnakeTail(self.direction, self.field,
+            self.x - 2 * SZ_BODY, self.y))
 
     def Draw(self):
         for b in self.body:
@@ -187,6 +248,9 @@ class Field:
         # По центру экрана создать змею
         self.snake = Snake(self, int(w/2), int(h/2))
 
+    def Update(self):
+        self.snake.Move()
+
     def Draw(self):
         # Нарисовать фон
         # Нарисовать все объекты
@@ -222,10 +286,17 @@ def run():
 
             # Обработать нажатия клавиш
             if event.type == pygame.KEYDOWN:
-                if event.type == K_BACKSPACE:
+                if event.key == pygame.K_q:
                     done = True
-                    continue
-    
+                    break
+                if event.key == pygame.K_RIGHT:
+                    fld.snake.ChangeDir(DD_RIGHT)
+                if event.key == pygame.K_LEFT:
+                    fld.snake.ChangeDir(DD_LEFT)
+                if event.key == pygame.K_UP:
+                    fld.snake.ChangeDir(DD_UP)
+                if event.key == pygame.K_DOWN:
+                    fld.snake.ChangeDir(DD_DOWN)
         # --- Screen-clearing code goes here
         screen.fill(C_BKGROUND)
         # Here, we clear the screen to white. Don't put other drawing commands
@@ -234,7 +305,8 @@ def run():
         # If you want a background image, replace this clear with blit'ing the
         # background image.
         
-        # --- Drawing code should go here      
+        # --- Drawing code should go here
+        fld.Update()
         # Нарисовать поле
         fld.Draw()
 
