@@ -83,6 +83,7 @@ class SnakeElem(FieldObj):
             self.direction = self.ch_dir[0][2]
             self.ch_dir.pop(0)
 
+
     def AddCDPoint(self, x, y, new_dir):
         self.ch_dir.append([x, y, new_dir])
 
@@ -171,7 +172,25 @@ class Snake(FieldObj):
     def Move(self):
         for e in self.body:
             e.Move(self.speed)
+        # Проверить на пересечение прямогольников головы и ягодки
+        rh = pygame.Rect(self.body[0].x, self.body[0].y, self.body[0].w, self.body[0].h)
+        rb = pygame.Rect(self.field.berry.x, self.field.berry.y, self.field.berry.w, self.field.berry.h)
+        if rh.colliderect(rb):
+            # Удалить текущую ягодку
+            # Создать новую
+            self.field.ReplaceBerry()
+            # Добавить растущий сегмент к змее
+            # Увеличить очки
+
+        # Проверить на пересечение прямогольников головы и камни
+        w, h = self.field.screen.get_size()
+        rh = pygame.Rect(self.body[0].x, self.body[0].y, self.body[0].w, self.body[0].h)
+        rs = pygame.Rect(self.field.stones[0].x, self.field.stones[0].y, self.field.stones[0].w, self.field.stones[0].h)
+        if rh.colliderect(rs):
+            self.x = 10
+            self.y = 10
         
+            
     def ChangeDir(self, dir):
         dir_constr = [set([DD_LEFT, DD_RIGHT]),
                       set([DD_DOWN, DD_UP])]
@@ -181,7 +200,7 @@ class Snake(FieldObj):
         self.direction = dir
         self.body[0].direction = dir
         for e in self.body[1:]:
-            e.AddCDPoint(self.body[0].x, self.body[0].y, dir) 
+            e.AddCDPoint(self.body[0].x, self.body[0].y, dir)
 
     def MakeSnake(self):
         self.body.append(SnakeHead(self.direction, self.field, self.x, self.y))
@@ -248,6 +267,8 @@ class Field:
         # По центру экрана создать змею
         self.snake = Snake(self, int(w/2), int(h/2))
 
+
+
     def Update(self):
         self.snake.Move()
 
@@ -262,6 +283,13 @@ class Field:
 
         # Нарисовать змею
         self.snake.Draw()
+    
+    def ReplaceBerry(self):
+        # Удалить вишнеку и создать новую
+        w, h = self.screen.get_size()
+        x, y = random.randint(0, w), random.randint(0, h)
+        self.berry = Berry(self, x, y)
+        self.berry.Draw()
 
 
 def run():
