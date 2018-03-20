@@ -195,7 +195,8 @@ class Snake(FieldObj):
         for s in self.field.stones:
             rs = pygame.Rect(s.x, s.y, s.w, s.h)
             if rh.colliderect(rs):
-                # TODO: Остановить игру, и начать её заново
+                self.field.game.state = GS_FINISHED
+                self.field.game.Start()
                 print("Hit the stone.")
         
     def ChangeDir(self, dir):
@@ -297,8 +298,25 @@ class Field:
         w, h = self.screen.get_size()
         x, y = random.randint(0, w), random.randint(0, h)
         self.berry = Berry(self, x, y)
-        # TODO: Необходимо проверить пересечение с сущесвующими корнями и змеёй
-
+        done = False
+        rb = pygame.Rect(self.berry.x, self.berry.y, self.berry.w, self.berry.h)
+        
+        while not done:
+            for s in self.stones:
+                rs = pygame.Rect(s.x, s.y, s.w, s.h)
+                if rb.colliderect(rs):
+                    x, y = random.randint(0, w), random.randint(0, h)
+                    self.berry = Berry(self, x, y)
+                else:
+                    done = True
+            for rh in self.snake.body:
+                rh = pygame.Rect(h.x, h.y, h.w, h.h)
+                if rb.colliderect(rh):
+                    x, y = random.randint(0, w), random.randint(0, h)
+                    self.berry = Berry(self, x, y)
+                else:
+                    done = True
+                 
 
 class Game:
     def __init__(self, screen):
