@@ -300,7 +300,7 @@ class Field:
         self.berry = Berry(self, x, y)
         done = False
         rb = pygame.Rect(self.berry.x, self.berry.y, self.berry.w, self.berry.h)
-        
+
         while not done:
             for s in self.stones:
                 rs = pygame.Rect(s.x, s.y, s.w, s.h)
@@ -309,7 +309,7 @@ class Field:
                     self.berry = Berry(self, x, y)
                 else:
                     done = True
-            for rh in self.snake.body:
+            for h in self.snake.body:
                 rh = pygame.Rect(h.x, h.y, h.w, h.h)
                 if rb.colliderect(rh):
                     x, y = random.randint(0, w), random.randint(0, h)
