@@ -16,6 +16,16 @@ DD_RIGHT = 1
 DD_UP    = 2
 DD_DOWN  = 3
 
+GS_NOT_STARTED = 0
+GS_IN_PROGRESS = 1
+GS_FINISHED    = 2
+GS_PAUSED      = 3
+
+GE_BERRY = 1
+GE_EGG   = 2
+
+SZ_STATE_SIZE = 50
+
 SZ_HEAD  = 20
 SZ_BODY  = 20
 SZ_BERRY = 15
@@ -176,21 +186,18 @@ class Snake(FieldObj):
         rh = pygame.Rect(self.body[0].x, self.body[0].y, self.body[0].w, self.body[0].h)
         rb = pygame.Rect(self.field.berry.x, self.field.berry.y, self.field.berry.w, self.field.berry.h)
         if rh.colliderect(rb):
-            # Удалить текущую ягодку
-            # Создать новую
             self.field.ReplaceBerry()
-            # Добавить растущий сегмент к змее
-            # Увеличить очки
+            #TODO: Добавить растущий сегмент к змее
+            self.field.game.AddScore(GE_BERRY)
 
-        # Проверить на пересечение прямогольников головы и камни
-        w, h = self.field.screen.get_size()
-        rh = pygame.Rect(self.body[0].x, self.body[0].y, self.body[0].w, self.body[0].h)
-        rs = pygame.Rect(self.field.stones[0].x, self.field.stones[0].y, self.field.stones[0].w, self.field.stones[0].h)
-        if rh.colliderect(rs):
-            self.x = 10
-            self.y = 10
+
+        # Проверить на пересечение прямогольников головы и камней
+        for s in self.field.stones:
+            rs = pygame.Rect(s.x, s.y, s.w, s.h)
+            if rh.colliderect(rs):
+                # TODO: Остановить игру, и начать её заново
+                print("Hit the stone.")
         
-            
     def ChangeDir(self, dir):
         dir_constr = [set([DD_LEFT, DD_RIGHT]),
                       set([DD_DOWN, DD_UP])]
@@ -248,8 +255,9 @@ class Egg(FieldObj):
 
 
 class Field:
-    def __init__(self, screen, x, y, w, h):
-        self.screen = screen
+    def __init__(self, game, x, y, w, h):
+        self.game = game
+        self.screen = self.game.screen
         self.x, self.y = x, y
         self.w, self.h = w, h
         self.stones = []
@@ -289,7 +297,44 @@ class Field:
         w, h = self.screen.get_size()
         x, y = random.randint(0, w), random.randint(0, h)
         self.berry = Berry(self, x, y)
-        self.berry.Draw()
+        # TODO: Необходимо проверить пересечение с сущесвующими корнями и змеёй
+
+
+class Game:
+    def __init__(self, screen):
+        self.screen = screen
+        self.fld = None
+        self.score = 0
+        self.state = GS_NOT_STARTED
+    
+    def Start(self):
+        self.fld = Field(self, 0, 0, self.screen.get_width(),
+                         self.screen.get_height() - SZ_STATE_SIZE)
+        self.fld.CreateField()
+        self.state = GS_IN_PROGRESS
+
+    def ChangeDir(self, new_dir):
+        if self.state == GS_IN_PROGRESS:
+            self.fld.snake.ChangeDir(new_dir)
+
+    def Update(self):
+        if self.state == GS_IN_PROGRESS:
+            self.fld.Update()
+            # TODO: Обновить статистику
+    
+    def Draw(self):
+        self.DrawStat()
+        self.fld.Draw() 
+
+    def DrawStat(self):
+        # TODO: Нарисовать статистику
+        pass
+
+    def AddScore(self, event):
+        if event == GE_BERRY:
+            self.score += 1
+        elif event == GE_EGG:
+            self.score += 5
 
 
 def run():
@@ -302,8 +347,8 @@ def run():
     clock = pygame.time.Clock()
     
     # Создать поле
-    fld = Field(screen, 0, 0, screen.get_width(), screen.get_height())
-    fld.CreateField()
+    game = Game(screen)
+    game.Start()
     
     done = False
 
@@ -318,13 +363,13 @@ def run():
                     done = True
                     break
                 if event.key == pygame.K_RIGHT:
-                    fld.snake.ChangeDir(DD_RIGHT)
+                    game.ChangeDir(DD_RIGHT)
                 if event.key == pygame.K_LEFT:
-                    fld.snake.ChangeDir(DD_LEFT)
+                    game.ChangeDir(DD_LEFT)
                 if event.key == pygame.K_UP:
-                    fld.snake.ChangeDir(DD_UP)
+                    game.ChangeDir(DD_UP)
                 if event.key == pygame.K_DOWN:
-                    fld.snake.ChangeDir(DD_DOWN)
+                    game.ChangeDir(DD_DOWN)
         # --- Screen-clearing code goes here
         screen.fill(C_BKGROUND)
         # Here, we clear the screen to white. Don't put other drawing commands
@@ -334,9 +379,9 @@ def run():
         # background image.
         
         # --- Drawing code should go here
-        fld.Update()
+        game.Update()
         # Нарисовать поле
-        fld.Draw()
+        game.Draw()
 
         # --- Go ahead and update the screen with what we've drawn.
         pygame.display.flip()
