@@ -34,6 +34,9 @@ SZ_STONE = SZ_BERRY
 SZ_EYES  = 2
 
 C_BKGROUND = (  0,   0,   0)
+C_BASE     = (255, 127,  39)
+C_TEXT     = (255, 201,  14)
+
 C_STONE    = (127, 127, 127)
 C_BERRY    = (181,  30,  30)
 C_EGG      = (255, 255, 255)
@@ -346,7 +349,23 @@ class Game:
 
     def DrawStat(self):
         # TODO: Нарисовать статистику
-        pass
+        s_rect = self.screen.get_rect()
+
+        surf = self.screen.subsurface(pygame.Rect(0, 0,
+                                 SZ_STATE_SIZE*2, SZ_STATE_SIZE))
+    
+        font = pygame.font.SysFont("Consolas", 16, bold = True)
+
+
+        bas     = font.render("Score[  ]",
+                           True, C_BASE)
+
+        score   = font.render("      " + str(self.score),
+                           True, C_TEXT)
+
+        surf.blit(bas, [10,int(SZ_STATE_SIZE / 2)])
+        surf.blit(score, [10,int(SZ_STATE_SIZE / 2)])
+        
 
     def AddScore(self, event):
         if event == GE_BERRY:
