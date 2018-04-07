@@ -29,8 +29,9 @@ SHIFT_CNTR = 8
 EGG_TIME = 30 * 60
 EGG_MAX_TIME = 10 * 60
 
-SZ_S_OFFSET   = 55
-SZ_STATE_SIZE = 50
+SZ_S_OFFSET       = 55
+SZ_STATE_SIZE     = 50
+SZ_EGG_STATE_SIZE = 50
 
 SZ_HEAD  = 20
 SZ_BODY  = 20
@@ -60,6 +61,7 @@ class FieldObj:
 
     def Draw(self):
         pass
+
 
 
 class SnakeElem(FieldObj):
@@ -107,9 +109,9 @@ class SnakeElem(FieldObj):
             self.direction = self.ch_dir[0][2]
             self.ch_dir.pop(0)
 
-
     def AddCDPoint(self, x, y, new_dir):
         self.ch_dir.append([x, y, new_dir])
+
 
 
 class SnakeHead(SnakeElem):
@@ -131,15 +133,19 @@ class SnakeHead(SnakeElem):
         if self.direction == DD_RIGHT or self.direction == DD_LEFT:
             # Нарисовать две точки глаз одна под другой(вертикально)
             pygame.draw.circle(self.field.screen, C_EYES,
-                               (x + int(SZ_HEAD / 2), y + int(SZ_HEAD / 3)), SZ_EYES)
+                               (x + int(SZ_HEAD / 2),
+                                y + int(SZ_HEAD / 3)), SZ_EYES)
             pygame.draw.circle(self.field.screen, C_EYES,
-                               (x + int(SZ_HEAD / 2), y + int(SZ_HEAD - (SZ_HEAD / 3))), SZ_EYES)
+                               (x + int(SZ_HEAD / 2),
+                                y + int(SZ_HEAD - (SZ_HEAD / 3))), SZ_EYES)
         else:
             # Нарисовать две точки глаз одну за другой(горизонтально)
             pygame.draw.circle(self.field.screen, C_EYES,
-                               (x + int(SZ_HEAD / 3), y + int(SZ_HEAD / 2)), SZ_EYES)
+                               (x + int(SZ_HEAD / 3),
+                                y + int(SZ_HEAD / 2)), SZ_EYES)
             pygame.draw.circle(self.field.screen, C_EYES,
-                               (x + int(SZ_HEAD - (SZ_HEAD / 3)), y + int(SZ_HEAD / 2)), SZ_EYES)
+                               (x + int(SZ_HEAD - (SZ_HEAD / 3)),
+                                y + int(SZ_HEAD / 2)), SZ_EYES)
 
     def Move(self, speed):
         self.cntr += 1
@@ -149,6 +155,8 @@ class SnakeHead(SnakeElem):
         if self.dd > 1 or self.dd < -1:
             self.d = -self.d
         SnakeElem.Move(self, speed)
+
+
 
 class SnakeBody(SnakeElem):
     def __init__(self, dir, fld, x, y, w = SZ_BODY, h = SZ_BODY):
@@ -163,12 +171,15 @@ class SnakeBody(SnakeElem):
         if self.direction == DD_LEFT or self.direction == DD_RIGHT:
             y += self.dd
         if self.direction == DD_RIGHT or self.direction == DD_LEFT:
-            pygame.draw.line(self.field.screen, C_BODY, (x, y + int(SZ_BODY/2)),
+            pygame.draw.line(self.field.screen, C_BODY,
+                             (x, y + int(SZ_BODY/2)),
                              (x + SZ_BODY, y + int(SZ_BODY/2)), SZ_BODY)
         # Направление вверх или вниз
         elif self.direction == DD_UP or self.direction == DD_DOWN:
-            pygame.draw.line(self.field.screen, C_BODY, (x + int(SZ_HEAD/2), y),
+            pygame.draw.line(self.field.screen, C_BODY,
+                             (x + int(SZ_HEAD/2), y),
                              (x + int(SZ_BODY / 2), y + SZ_BODY), SZ_BODY)
+
 
 
 class SnakeTail(SnakeElem):
@@ -204,8 +215,7 @@ class SnakeTail(SnakeElem):
             y2 = y + SZ_BODY            
         pygame.draw.line(self.field.screen, C_BODY, (x1, y1),
                          (x2, y2), SZ_BODY) 
-        
-            
+                    
 
 
 class Snake(FieldObj):
@@ -225,12 +235,14 @@ class Snake(FieldObj):
             e.Move(self.speed)
         
         # Проверить на пересечение прямогольников головы и ягодки
-        rh = pygame.Rect(self.body[0].x, self.body[0].y, self.body[0].w, self.body[0].h)
-        rb = pygame.Rect(self.field.berry.x, self.field.berry.y, self.field.berry.w, self.field.berry.h)
+        rh = pygame.Rect(self.body[0].x, self.body[0].y,
+                         self.body[0].w, self.body[0].h)
+        rb = pygame.Rect(self.field.berry.x, self.field.berry.y,
+                         self.field.berry.w, self.field.berry.h)
         if rh.colliderect(rb):
             self.field.ReplaceBerry()
             # Вставляем новую часть тела на место головы
-            self.body.insert(1, SnakeBody(self.body[0].direction, self.field, 
+            self.body.insert(1, SnakeBody(self.body[0].direction, self.field,
                                           self.body[0].x, self.body[0].y))
             # Переместим голову по направлению движения на размер головы
             if self.body[0].direction == DD_RIGHT:
@@ -283,6 +295,7 @@ class Snake(FieldObj):
             b.Draw()
 
 
+
 class Stone(FieldObj):
     def __init__(self, fld, x, y):
         size = random.randint(10, 50)
@@ -291,8 +304,11 @@ class Stone(FieldObj):
     def Draw(self):
         # Нарисовать закрашенный круг
         pygame.draw.circle(self.field.screen, C_STONE,
-                           (self.x + int(SZ_STONE/2), self.y + int(SZ_STONE/2)), 
+                           (self.x + int(SZ_STONE/2),
+                            self.y + int(SZ_STONE/2)),
                            int(SZ_STONE/2))
+
+
 
 class Berry(FieldObj):
     def __init__(self, fld, x, y):
@@ -301,9 +317,11 @@ class Berry(FieldObj):
     def Draw(self):
         # нарисовать кружок красного цвета
         pygame.draw.circle(self.field.screen, C_BERRY,
-                           (self.x + int(SZ_BERRY/2), self.y + int(SZ_BERRY/2)), 
+                           (self.x + int(SZ_BERRY/2),
+                            self.y + int(SZ_BERRY/2)),
                            int(SZ_BERRY / 2))
-        
+
+
 
 class Egg(FieldObj):
     def __init__(self, fld, x, y):
@@ -314,6 +332,7 @@ class Egg(FieldObj):
         pygame.draw.circle(self.field.screen, C_EGG,
                    (self.x + int(SZ_EGG/2), self.y + int(SZ_EGG/2)),
                    int(SZ_EGG / 2))
+
 
 
 class Field:
@@ -338,9 +357,8 @@ class Field:
         x, y = random.randint(0, self.w), random.randint(0, self.h)
         self.berry = Berry(self, self.x + x, self.y + y)
         # По центру экрана создать змею
-        self.snake = Snake(self, self.x + int(self.w/2), self.y + int(self.h/2))
-
-
+        self.snake = Snake(self, self.x + int(self.w/2),
+                           self.y + int(self.h/2))
 
     def Update(self):
         self.snake.Move()
@@ -351,7 +369,9 @@ class Field:
                 x, y = random.randint(0, self.w), random.randint(0, self.h)
                 self.egg = Egg(self, self.x + x, self.y + y)
                 self.deltime = EGG_MAX_TIME
-        # Удалить яйцо если находится на поле больше выделеного времени 
+        if self.egg != None:
+            self.game.DrawEggStat()
+        # Удалить яйцо если находится на поле больше выделеного времени
         if self.egg != None:
             self.deltime -= 1
             if self.deltime == 0:
@@ -379,7 +399,8 @@ class Field:
         x, y = random.randint(0, w), random.randint(0, h)
         self.berry = Berry(self, self.x + x, self.y + y)
         done = False
-        rb = pygame.Rect(self.berry.x, self.berry.y, self.berry.w, self.berry.h)
+        rb = pygame.Rect(self.berry.x, self.berry.y, self.berry.w,
+                         self.berry.h)
 
         while not done:
             for s in self.stones:
@@ -464,6 +485,18 @@ class Game:
         for l in range(self.lives):
             life = SnakeHead(DD_DOWN, self.fld, x + l * (SZ_HEAD + 10), 20)
             life.Draw()
+        
+    def DrawEggStat(self):
+        s_rect = self.screen.get_rect()
+        surf = self.screen.subsurface(pygame.Rect(s_rect.w - 150,
+                                                  s_rect.h - SZ_EGG_STATE_SIZE,
+                                                  150, SZ_EGG_STATE_SIZE))
+        font = pygame.font.SysFont("Consolas", 16, bold = True)
+        bas  = font.render("Time left[   ]", True, C_BASE)
+        time = font.render("          " + str(self.fld.deltime), True, C_TEXT)
+
+        surf.blit(bas, [10,20])
+        surf.blit(time, [10,20])
 
     def AddScore(self, event):
         if event == GE_BERRY:
