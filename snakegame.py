@@ -6,6 +6,7 @@
 
 import sys
 import random
+from math import ceil
 
 import pygame
 import pygame.locals
@@ -29,6 +30,8 @@ SHIFT_CNTR = 8
 EGG_TIME = 30 * 60
 EGG_MAX_TIME = 10 * 60
 
+SZ_SCREEN         = (1600, 900)
+SZ_GRASS_PATT     = 160
 SZ_S_OFFSET       = 55
 SZ_STATE_SIZE     = 50
 SZ_EGG_STATE_SIZE = 50
@@ -39,6 +42,10 @@ SZ_BERRY = 15
 SZ_EGG   = 20
 SZ_STONE = SZ_BERRY
 SZ_EYES  = 2
+
+#TODO: Изменить цвета для того чтобы их было видно на траве
+#TODO: Проработать плавные повороты змеи
+#TODO: Найти картинки для и подготовить картинки для тела змеи
 
 C_BKGROUND = (  0,   0,   0)
 C_BASE     = (153, 217, 234)
@@ -62,7 +69,7 @@ class FieldObj:
     def Draw(self):
         pass
 
-
+#TODO: Создать стену на поле
 
 class SnakeElem(FieldObj):
     def __init__(self, fld, dir, x, y, w, h):
@@ -271,6 +278,7 @@ class Snake(FieldObj):
                 break
         if ds != -1:
             self.field.RemoveStone(ds)
+        # TODO: Проверить на пересечение головы и частей тела
 
     def ChangeDir(self, dir):
         dir_constr = [set([DD_LEFT, DD_RIGHT]),
@@ -347,6 +355,7 @@ class Field:
         self.egg = None
         self.time = 0
         self.deltime = EGG_MAX_TIME
+        self.grass = pygame.image.load("./images/grass.jpg")
 
     def CreateField(self):
         # В случайных местах создать 6 камней и одну ягодy
@@ -379,6 +388,10 @@ class Field:
 
     def Draw(self):
         # Нарисовать фон
+        for r in range(math.ceil(SZ_SCREEN[1]/SZ_GRASS_PATT)):
+            for c in range(math.ceil(SZ_SCREEN[0]/SZ_GRASS_PATT)):
+                self.screen.blit(self.grass, (c * SZ_GRASS_PATT, r * SZ_GRASS_PATT + SZ_STATE_SIZE))
+
         # Нарисовать все объекты
         for s in self.stones:
             s.Draw()
@@ -489,11 +502,11 @@ class Game:
     def DrawEggStat(self):
         s_rect = self.screen.get_rect()
         surf = self.screen.subsurface(pygame.Rect(s_rect.w - 150,
-                                                  s_rect.h - SZ_EGG_STATE_SIZE,
+                                                  0,
                                                   150, SZ_EGG_STATE_SIZE))
         font = pygame.font.SysFont("Consolas", 16, bold = True)
-        bas  = font.render("Time left[   ]", True, C_BASE)
-        time = font.render("          " + str(self.fld.deltime), True, C_TEXT)
+        bas  = font.render("Time left[    ]", True, C_BASE)
+        time = font.render("          " + "{0:3.1f}".format(self.fld.deltime / 60), True, C_TEXT)
 
         surf.blit(bas, [10,20])
         surf.blit(time, [10,20])
@@ -508,7 +521,7 @@ class Game:
 def run():
     pygame.init()
 
-    size=[1600, 900]
+    size = SZ_SCREEN
     screen=pygame.display.set_mode(size, pygame.DOUBLEBUF)
     pygame.display.set_caption("Snake")
     # Добавить таймер чтобы обновление было не чаще чем 60 кадров в секунду
