@@ -25,13 +25,16 @@ GS_PAUSED      = 3
 GE_BERRY = 1
 GE_EGG   = 2
 
-SHIFT_CNTR = 8
+SHIFT_CNTR = 4
 
 EGG_TIME = 30 * 60
 EGG_MAX_TIME = 10 * 60
 
 SZ_SCREEN         = (1600, 900)
 SZ_GRASS_PATT     = 160
+SZ_WALL_PATT      = 40
+SZ_WALL_W         = 80
+SZ_WALL_H         = 40
 SZ_S_OFFSET       = 55
 SZ_STATE_SIZE     = 50
 SZ_EGG_STATE_SIZE = 50
@@ -45,14 +48,14 @@ SZ_EYES  = 2
 
 #TODO: Изменить цвета для того чтобы их было видно на траве
 #TODO: Проработать плавные повороты змеи
-#TODO: Найти картинки для и подготовить картинки для тела змеи
+#TODO: Найти картинки и подготовить картинки для тела змеи
 
 C_BKGROUND = (  0,   0,   0)
 C_BASE     = (153, 217, 234)
 C_TEXT     = (128, 255,   0)
 C_ST_LINE  = (255, 255,   0)
 
-C_STONE    = (127, 127, 127)
+C_STONE    = ( 63,  63,  63)
 C_BERRY    = (181,  30,  30)
 C_EGG      = (255, 255, 255)
 C_BODY     = (  0, 198,  50)
@@ -80,7 +83,8 @@ class SnakeElem(FieldObj):
         # Точки направления - [x, y, new_dir]
         self.ch_dir = []
         self.dd = 0
-    
+        self.image_body = pygame.image.load("./images/body.jpg")
+
     def SetDD(self, dd):
         self.dd = dd
 
@@ -101,7 +105,7 @@ class SnakeElem(FieldObj):
         self.x += dx
         self.y += dy
 
-        if self.x > self.field.w + self.x:
+        if self.x > self.field.w + self.field.x:
             self.x = 0
         if self.x < 0:
             self.x = self.field.w
@@ -278,7 +282,20 @@ class Snake(FieldObj):
                 break
         if ds != -1:
             self.field.RemoveStone(ds)
-        # TODO: Проверить на пересечение головы и частей тела
+        # Проверить на пересечение прямогульников стены и головы
+        rw = pygame.Rect(self.field.wall.x, self.field.wall.y, self.field.wall.w, self.field.wall.h)
+        if rw.colliderect(rh):
+            self.field.game.DecLife()
+        # Проверить на пересечение прямоугольников стены и вишинки
+        if rw.colliderect(rb):
+            self.field.ReplaceBerry()
+        # Проверить на пересечение прямоугольников стены и яйца
+        if self.field.egg != None:
+            if rw.colliderect(re):
+                self.field.ReplaceWall()
+
+        #TODO: Проверить на пересечение головы и частей тела
+
 
     def ChangeDir(self, dir):
         dir_constr = [set([DD_LEFT, DD_RIGHT]),
@@ -331,6 +348,17 @@ class Berry(FieldObj):
 
 
 
+class Wall(FieldObj):
+    def __init__(self, fld, x, y):
+        FieldObj.__init__(self, fld, x, y, SZ_WALL_W, SZ_WALL_H)
+        self.wall_image = pygame.image.load("./images/wall.jpg")
+
+    def Draw(self):
+        # Нарисовать стену
+        for w in range(ceil(SZ_WALL_W / SZ_WALL_PATT)):
+            for h in range(ceil(SZ_WALL_H / SZ_WALL_PATT)):
+                self.field.screen.blit(self.wall_image, (self.x + SZ_WALL_PATT * w, self.y + SZ_WALL_PATT * h))
+
 class Egg(FieldObj):
     def __init__(self, fld, x, y):
         FieldObj.__init__(self, fld, x, y, SZ_EGG, SZ_EGG)
@@ -355,7 +383,8 @@ class Field:
         self.egg = None
         self.time = 0
         self.deltime = EGG_MAX_TIME
-        self.grass = pygame.image.load("./images/grass.jpg")
+        self.grass = pygame.image.load("./images/grass1.jpg")
+        self.wall = None
 
     def CreateField(self):
         # В случайных местах создать 6 камней и одну ягодy
@@ -368,6 +397,9 @@ class Field:
         # По центру экрана создать змею
         self.snake = Snake(self, self.x + int(self.w/2),
                            self.y + int(self.h/2))
+        # Создать стену
+        x, y = random.randint(100, self.w - 100), random.randint(SZ_STATE_SIZE, self.h - SZ_EGG_STATE_SIZE)
+        self.wall = Wall(self, self.x + x, self.y + y)
 
     def Update(self):
         self.snake.Move()
@@ -388,13 +420,16 @@ class Field:
 
     def Draw(self):
         # Нарисовать фон
-        for r in range(math.ceil(SZ_SCREEN[1]/SZ_GRASS_PATT)):
-            for c in range(math.ceil(SZ_SCREEN[0]/SZ_GRASS_PATT)):
+        for r in range(ceil(SZ_SCREEN[1]/SZ_GRASS_PATT)):
+            for c in range(ceil(SZ_SCREEN[0]/SZ_GRASS_PATT)):
                 self.screen.blit(self.grass, (c * SZ_GRASS_PATT, r * SZ_GRASS_PATT + SZ_STATE_SIZE))
 
         # Нарисовать все объекты
         for s in self.stones:
             s.Draw()
+
+        # Нарисовать стену
+        self.wall.Draw()
 
         # Нарисовать ягоду
         self.berry.Draw()
@@ -430,7 +465,13 @@ class Field:
                     self.berry = Berry(self, x, y)
                 else:
                     done = True
-    
+
+
+    def ReplaceWall(self):
+        # Удалить вишнеку и создать новую
+        x, y = random.randint(100, self.w - 100), random.randint(SZ_STATE_SIZE, self.h - SZ_EGG_STATE_SIZE)
+        self.wall = Wall(self, self.x + x, self.y + y)        
+
     def EggEaten(self):
         self.egg = None
         self.time = 0
@@ -462,7 +503,6 @@ class Game:
     def Update(self):
         if self.state == GS_IN_PROGRESS:
             self.fld.Update()
-            # TODO: Обновить статистику
     
     def Draw(self):
         self.DrawStat()
@@ -472,7 +512,6 @@ class Game:
         self.lives -= 1
         print("Lives count decremented to", self.lives)
         if self.lives == 0:
-            # TODO: Обработать конец игры
             self.Start()
 
     def DrawStat(self):
