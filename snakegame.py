@@ -293,9 +293,11 @@ class Snake(FieldObj):
         if self.field.egg != None:
             if rw.colliderect(re):
                 self.field.ReplaceWall()
-
         #TODO: Проверить на пересечение головы и частей тела
-
+        for b in self.body[3:]:
+            rbody = pygame.Rect(b.x, b.y, b.w, b.h)
+            if rh.colliderect(rbody):
+                self.field.DecLife()        
 
     def ChangeDir(self, dir):
         dir_constr = [set([DD_LEFT, DD_RIGHT]),
