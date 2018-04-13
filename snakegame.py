@@ -238,6 +238,8 @@ class Snake(FieldObj):
         self.speed = 2
         self.direction = DD_RIGHT
         self.MakeSnake()
+        self.last_turn = -1
+        self.last_turn_keys = []
 
     def Move(self):
         for i, e in enumerate(reversed(self.body)):
@@ -293,19 +295,31 @@ class Snake(FieldObj):
         if self.field.egg != None:
             if rw.colliderect(re):
                 self.field.ReplaceWall()
-        #TODO: Проверить на пересечение головы и частей тела
         for b in self.body[3:]:
             rbody = pygame.Rect(b.x, b.y, b.w, b.h)
             if rh.colliderect(rbody):
-                self.field.DecLife()        
+                self.field.game.DecLife()        
+        self.last_turn -= self.speed
+        if self.last_turn < 0 and len(self.last_turn_keys) != 0:
+            self.Turn(self.last_turn_keys.pop(0))
+
 
     def ChangeDir(self, dir):
+        # Ограничения на поворот
         dir_constr = [set([DD_LEFT, DD_RIGHT]),
                       set([DD_DOWN, DD_UP])]
         for dc in dir_constr:    
             if self.direction in dc and dir in dc:
                 return
+        if self.last_turn >= 0:
+            self.last_turn_keys.append(dir)
+            return
+        self.Turn(dir)
+
+    def Turn(self, dir):
         self.direction = dir
+        self.last_turn = SZ_BODY
+        #TODO: Изменить координаты головы в зависимости от направления поворота
         self.body[0].direction = dir
         for e in self.body[1:]:
             e.AddCDPoint(self.body[0].x, self.body[0].y, dir)
@@ -379,6 +393,7 @@ class Field:
         self.screen = self.game.screen
         self.x, self.y = x, y
         self.w, self.h = w, h
+        self.bkground = None
         self.stones = []
         self.snake = None
         self.berry = None
@@ -422,9 +437,9 @@ class Field:
 
     def Draw(self):
         # Нарисовать фон
-        for r in range(ceil(SZ_SCREEN[1]/SZ_GRASS_PATT)):
-            for c in range(ceil(SZ_SCREEN[0]/SZ_GRASS_PATT)):
-                self.screen.blit(self.grass, (c * SZ_GRASS_PATT, r * SZ_GRASS_PATT + SZ_STATE_SIZE))
+        if self.bkground == None:
+            self.CreateBkground()
+        self.screen.blit(self.bkground, (0, SZ_STATE_SIZE))
 
         # Нарисовать все объекты
         for s in self.stones:
@@ -443,6 +458,13 @@ class Field:
         # Нарисовать змею
         self.snake.Draw()
     
+    def CreateBkground(self):
+        self.bkground = pygame.Surface((SZ_SCREEN[0], SZ_SCREEN[1]))
+        for r in range(ceil(SZ_SCREEN[1]/SZ_GRASS_PATT)):
+            for c in range(ceil(SZ_SCREEN[0]/SZ_GRASS_PATT)):
+                self.bkground.blit(self.grass, (c * SZ_GRASS_PATT, r * SZ_GRASS_PATT))
+
+
     def ReplaceBerry(self):
         # Удалить вишнеку и создать новую
         w, h = self.screen.get_size()
