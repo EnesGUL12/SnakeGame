@@ -46,10 +46,6 @@ SZ_EGG   = 20
 SZ_STONE = SZ_BERRY
 SZ_EYES  = 2
 
-#TODO: Изменить цвета для того чтобы их было видно на траве
-#TODO: Проработать плавные повороты змеи
-#TODO: Найти картинки и подготовить картинки для тела змеи
-
 C_BKGROUND = (  0,   0,   0)
 C_BASE     = (153, 217, 234)
 C_TEXT     = (128, 255,   0)
@@ -72,7 +68,7 @@ class FieldObj:
     def Draw(self):
         pass
 
-#TODO: Создать стену на поле
+
 
 class SnakeElem(FieldObj):
     def __init__(self, fld, dir, x, y, w, h):
@@ -84,12 +80,18 @@ class SnakeElem(FieldObj):
         self.ch_dir = []
         self.dd = 0
         self.image_body = pygame.image.load("./images/body.jpg")
+        self.image_corner = pygame.image.load("./images/corner.jpg")
+        self.time_corner = 0
 
     def SetDD(self, dd):
         self.dd = dd
 
     def Move(self, speed):
         self.speed = speed
+        if len(self.ch_dir) != 0 and self.x == self.ch_dir[0][0] and self.y == self.ch_dir[0][1]:
+            self.direction = self.ch_dir[0][2]
+            self.ch_dir.pop(0)
+
         if self.direction == DD_RIGHT:
             dx = self.speed
             dy = 0
@@ -114,15 +116,31 @@ class SnakeElem(FieldObj):
         if self.y < self.field.y:
             self.y = self.field.h
 
-        if len(self.ch_dir) == 0:
-            return
-        if self.x == self.ch_dir[0][0] and self.y == self.ch_dir[0][1]:
-            self.direction = self.ch_dir[0][2]
-            self.ch_dir.pop(0)
-
     def AddCDPoint(self, x, y, new_dir):
         self.ch_dir.append([x, y, new_dir])
 
+    def Corner(self):
+        self.x = self.ch_dir[0][0]
+        self.y = self.ch_dir[0][1]
+        self.direction = self.ch_dir[0][2]
+        self.w = SZ_BODY
+        self.h = SZ_BODY
+    
+    def Growing(self):
+        # Рост тела
+        self.future_w = SZ_BODY
+        self.future_h = SZ_BODY
+        self.direction = self.field.snake.body[0].direction
+        self.x = self.ch_dir[0][0]
+        self.y = self.ch_dir[0][1]
+        self.w = 0
+        self.h = 0
+    
+    def Reduction(self):
+        # Уменьшение тела
+        self.direction = self.field.snake.body[1].direction
+
+        
 
 
 class SnakeHead(SnakeElem):
@@ -320,16 +338,29 @@ class Snake(FieldObj):
         self.direction = dir
         self.last_turn = SZ_BODY
         #TODO: Изменить координаты головы в зависимости от направления поворота
+        if dir == DD_RIGHT:
+            self.body[0].x += SZ_HEAD
+            self.body[0].y = self.body[1].y
+        elif dir == DD_LEFT:
+            self.body[0].x -= SZ_HEAD
+            self.body[0].y = self.body[1].y
+        elif dir == DD_UP:
+            self.body[0].y -= SZ_HEAD
+            self.body[0].x = self.body[1].x
+        else:
+            self.body[0].y += SZ_HEAD
+            self.body[0].x = self.body[1].x
         self.body[0].direction = dir
         for e in self.body[1:]:
-            e.AddCDPoint(self.body[0].x, self.body[0].y, dir)
+            e.AddCDPoint(self.body[1].x, self.body[1].y, dir)
 
     def MakeSnake(self):
         self.body.append(SnakeHead(self.direction, self.field, self.x, self.y))
-        self.body.append(SnakeBody(self.direction, self.field, 
-            self.x - SZ_BODY, self.y))
+        for b in range(2):
+            self.body.append(SnakeBody(self.direction, self.field, 
+                self.x - (b + 1) * SZ_BODY, self.y))
         self.body.append(SnakeTail(self.direction, self.field,
-            self.x - 2 * SZ_BODY, self.y))
+            self.x - 3 * SZ_BODY, self.y))
 
     def Draw(self):
         for b in self.body:
@@ -367,7 +398,8 @@ class Berry(FieldObj):
 class Wall(FieldObj):
     def __init__(self, fld, x, y):
         FieldObj.__init__(self, fld, x, y, SZ_WALL_W, SZ_WALL_H)
-        self.wall_image = pygame.image.load("./images/wall.jpg")
+        self.wall_image = pygame.image.load("./images/body.jpg")
+        self.wall_image.set_colorkey(pygame.Color(255, 255, 255, 255))
 
     def Draw(self):
         # Нарисовать стену
