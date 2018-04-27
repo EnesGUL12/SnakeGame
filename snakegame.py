@@ -9,7 +9,6 @@ import random
 from math import ceil
 
 import pygame
-import pygame.locals
 
 
 DD_LEFT  = 0
@@ -118,29 +117,6 @@ class SnakeElem(FieldObj):
 
     def AddCDPoint(self, x, y, new_dir):
         self.ch_dir.append([x, y, new_dir])
-
-    def Corner(self):
-        self.x = self.ch_dir[0][0]
-        self.y = self.ch_dir[0][1]
-        self.direction = self.ch_dir[0][2]
-        self.w = SZ_BODY
-        self.h = SZ_BODY
-    
-    def Growing(self):
-        # Рост тела
-        self.future_w = SZ_BODY
-        self.future_h = SZ_BODY
-        self.direction = self.field.snake.body[0].direction
-        self.x = self.ch_dir[0][0]
-        self.y = self.ch_dir[0][1]
-        self.w = 0
-        self.h = 0
-    
-    def Reduction(self):
-        # Уменьшение тела
-        self.direction = self.field.snake.body[1].direction
-
-        
 
 
 class SnakeHead(SnakeElem):
@@ -398,7 +374,7 @@ class Berry(FieldObj):
 class Wall(FieldObj):
     def __init__(self, fld, x, y):
         FieldObj.__init__(self, fld, x, y, SZ_WALL_W, SZ_WALL_H)
-        self.wall_image = pygame.image.load("./images/body.jpg")
+        self.wall_image = pygame.image.load("./images/body.bmp")
         self.wall_image.set_colorkey(pygame.Color(255, 255, 255, 255))
 
     def Draw(self):
