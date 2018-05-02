@@ -234,12 +234,23 @@ class Snake(FieldObj):
         self.MakeSnake()
         self.last_turn = -1
         self.last_turn_keys = []
+        # Точка поворота это элемент который в данный момент является поворотом
+        self.turn_points = []
+        self.step2turn = int(SZ_BODY / self.speed)
+
+
 
     def Move(self):
         for i, e in enumerate(reversed(self.body)):
             if i < len(self.body) - 1:
                 e.SetDD(self.body[len(self.body) - 2 - i].dd)
             e.Move(self.speed)
+
+        #TODO: Проверить что дошли до точки поворота(step2turn = 0)
+        if len(self.turn_points) != 0:
+            if self.step2turn == 0:
+                pass
+        #TODO: Изминить признаки элементов(проверить что уголок дошол до конца змеи и изменить количество turn_points)
         
         # Проверить на пересечение прямогольников головы и ягодки
         rh = pygame.Rect(self.body[0].x, self.body[0].y,
@@ -313,7 +324,6 @@ class Snake(FieldObj):
     def Turn(self, dir):
         self.direction = dir
         self.last_turn = SZ_BODY
-        #TODO: Изменить координаты головы в зависимости от направления поворота
         if dir == DD_RIGHT:
             self.body[0].x += SZ_HEAD
             self.body[0].y = self.body[1].y
@@ -329,6 +339,8 @@ class Snake(FieldObj):
         self.body[0].direction = dir
         for e in self.body[1:]:
             e.AddCDPoint(self.body[1].x, self.body[1].y, dir)
+        #TODO: Добавить новый turn_points, добавить номер элемента который будет уголком
+        self.turn_points.append(self.body[2])
 
     def MakeSnake(self):
         self.body.append(SnakeHead(self.direction, self.field, self.x, self.y))
@@ -375,7 +387,7 @@ class Wall(FieldObj):
     def __init__(self, fld, x, y):
         FieldObj.__init__(self, fld, x, y, SZ_WALL_W, SZ_WALL_H)
         self.wall_image = pygame.image.load("./images/body.bmp")
-        self.wall_image.set_colorkey(pygame.Color(255, 255, 255, 255))
+        self.wall_image.set_colorkey(pygame.Color(0, 0, 0, 255))
 
     def Draw(self):
         # Нарисовать стену
